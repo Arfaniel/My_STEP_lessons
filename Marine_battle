@@ -8,21 +8,61 @@ const int size = 10;
 // 2 - корабль
 // 5 - подбит
 // 1 - выстрел
-bool can(int field[][size], int x, int y)
+bool can(int field[][size], int x, int y) // можно ли поставить корабль в переданной точке
 {
-	if (	field[x][y] == 2	
-		|| field[x + 1][y] == 2
-		|| field[x][y + 1] == 2
-		|| field[x - 1][y] == 2
-		|| field[x][y - 1] == 2
-		|| field[x - 1][y - 1] == 2
-		|| field[x + 1][y + 1] == 2
-		|| field[x + 1][y - 1] == 2
-		|| field[x - 1][y + 1] == 2)
-		return false;
-	else return true;
+	if (y == 0 // корабль примыкает к левой границе поля
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x + 1][y + 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (y == 9 // кораль премыкает к правой границе поля
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y - 1] == 0)
+		return true;
+	if (x + 1 == size - 1 // корабль упирается в нижнюю границу
+		&& field[x][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (y + 1 == size - 1  // корабль упирается в плавую границу
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y - 1] == 0)
+		return true;
+	if (x == size - 1 // корабль примыкает к нижней границе
+		&& field[x][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (	field[x][y] == 0	// кобраль посередине
+		&& field[x + 1][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y + 1] == 0
+		&& field[x + 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	else return false;
 }
-bool shooting(int comp[][size], int x, int y)
+bool shooting(int comp[][size], int x, int y) // стрельба
 {
 	if (comp[x][y] == 0) // мимо
 	{
