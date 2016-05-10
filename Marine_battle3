@@ -1,0 +1,510 @@
+#include<iostream>
+#include<time.h>
+#include<conio.h>
+#include<Windows.h>
+using namespace std;
+const int size = 10;
+// 0 - вода
+// 2 - корабль
+// 5 - подбит
+// 1 - выстрел
+bool can(int field[][size], int x, int y) // можно ли поставить корабль в переданной точке
+{
+	if (y == 0 // корабль примыкает к левой границе поля
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x + 1][y + 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (y == 9 // кораль премыкает к правой границе поля
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y - 1] == 0)
+		return true;
+	if (x + 1 == size - 1 // корабль упирается в нижнюю границу
+		&& field[x][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (y + 1 == size - 1  // корабль упирается в плавую границу
+		&& field[x][y] == 0
+		&& field[x + 1][y] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y - 1] == 0)
+		return true;
+	if (x == size - 1 // корабль примыкает к нижней границе
+		&& field[x][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	if (	field[x][y] == 0	// кобраль посередине
+		&& field[x + 1][y] == 0
+		&& field[x][y + 1] == 0
+		&& field[x - 1][y] == 0
+		&& field[x][y - 1] == 0
+		&& field[x - 1][y - 1] == 0
+		&& field[x + 1][y + 1] == 0
+		&& field[x + 1][y - 1] == 0
+		&& field[x - 1][y + 1] == 0)
+		return true;
+	else return false;
+}
+bool shooting(int comp[][size], int x, int y) // стрельба
+{
+	if (comp[x][y] == 0) // мимо
+	{
+		comp[x][y] = 1;
+		return false;
+	}
+	else if (comp[x][y] == 2) // попал
+	{
+		comp[x][y] = 5;
+		return true;
+	}
+}
+void space(int comp[][size], int shoot[][size]) // прорисовка поля стрельбы игрока
+{
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (comp[i][j] == 2) shoot[i][j] = 0;
+			else shoot[i][j] = comp[i][j];
+		}
+	}
+}
+bool kill(int field[][size], int x, int y) // корабль убит?
+{
+		if (field[x + 1][y] != 2 && field[x - 1][y] != 2 && field[x][y + 1] != 2 && field[x][y - 1] != 2) // убил
+			return true;
+		else
+			return false; // ранил
+}
+void ripShip(int field[][size]) // обводим убитый корабль
+{
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (field[i][j] == 5 && i + 1 < size && field[i + 1][j] == 0)
+				field[i + 1][j] = 1;
+			if (field[i][j] == 5 && i - 1 >= 0 && field[i - 1][j] == 0)
+				field[i - 1][j] = 1;
+			if (field[i][j] == 5 && j + 1 < size && field[i][j + 1] == 0)
+				field[i][j + 1] = 1;
+			if (field[i][j] == 5 && j - 1 >= 0 && field[i][j - 1] == 0)
+				field[i][j - 1] = 1;
+			if (field[i][j] == 5 && i + 1 < size && j + 1 < size && field[i + 1][j + 1] == 0)
+				field[i + 1][j + 1] = 1;
+			if (field[i][j] == 5 && i - 1 >= 0 && j - 1 >= 0 && field[i - 1][j - 1] == 0)
+				field[i - 1][j - 1] = 1;
+			if (field[i][j] == 5 && i + 1 < size && j - 1 >= 0 && field[i + 1][j - 1] == 0)
+				field[i + 1][j - 1] = 1;
+			if (field[i][j] == 5 && i - 1 >= 0 && j + 1 < size && field[i - 1][j + 1] == 0)
+				field[i - 1][j + 1] = 1;
+		}
+	}
+}
+bool parceCoord(char *coord, int &x, int &y)  //парсим введенную координату выстрела
+{
+	if (coord[0] - 96 > size && coord[0] - 96 < 0)
+		return false;
+	{
+		x = coord[0] - 96;
+		if (coord[1] == '1' && coord[2] == '0')
+			y = 10;
+		else
+			y = coord[1] - 48;
+		return true;
+	}
+}
+void setShips(int field[][size])  // автоматическая установка кораблей
+{
+	for (;;)//установка 4-х палубного
+	{
+		int x = rand() % 10;
+		int y = rand() % 10;
+		int r = rand() % 2;
+		if (r == 1 && x + 3 < size) // горизонтальная установка
+		{
+			field[x][y] = 2;
+			field[x + 1][y] = 2;
+			field[x + 2][y] = 2;
+			field[x + 3][y] = 2;
+			break;
+		}
+		else
+			r = 2;
+		if (r == 2 && y + 3 < size) // вертикальная установка
+		{
+			field[x][y] = 2;
+			field[x][y + 1] = 2;
+			field[x][y + 2] = 2;
+			field[x][y + 3] = 2;
+			break;
+		}
+		else continue;
+	}
+	for (int i = 0; i < 2; i++)
+	{
+		for (;;)//установка 3-х палубного
+		{
+			int x = rand() % 10;
+			int y = rand() % 10;
+			if (can(field, x, y) == true)
+			{
+				int r = rand() % 2;
+				if (r == 1 && x + 2 < size && can(field, x + 2, y) == true && can(field, x + 2, y + 1) == true && can(field, x + 2, y-1) == true)
+				{
+					field[x][y] = 2;
+					field[x + 1][y] = 2;
+					field[x + 2][y] = 2;
+					break;
+				}
+				else r = 2;
+				if (r == 2 && y + 2 < size && can(field, x, y + 2) == true && can(field, x + 1, y + 2) == true && can(field, x-1, y + 2) == true)
+				{
+					field[x][y] = 2;
+					field[x][y + 1] = 2;
+					field[x][y + 2] = 2;
+					break;
+				}
+			}
+			else continue;
+		}
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		for (;;)//установка 2-х палубного
+		{
+			int x = rand() % 10;
+			int y = rand() % 10;
+			if (can(field, x, y) == true)
+			{
+				int r = rand() % 2;
+				if (r == 1 && x + 1 < size && can(field, x + 1, y) == true && can(field, x + 1, y + 1) == true && can(field, x + 1, y - 1) == true)
+				{
+					field[x][y] = 2;
+					field[x + 1][y] = 2;
+					break;
+				}
+				else r = 2;
+				if (r == 2 && y + 1 < size && can(field, x, y + 1) == true && can(field, x + 1, y + 1) == true && can(field, x - 1, y + 1) == true)
+				{
+					field[x][y] = 2;
+					field[x][y + 1] = 2;
+					break;
+				}
+			}
+			else continue;
+		}
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		for (;;) // установка однушек
+		{
+			int x = rand() % 10;
+			int y = rand() % 10;
+			if (can(field, x, y) == true)
+			{
+				field[x][y] = 2;
+				break;
+			}
+			else continue;
+		}
+	}
+}
+void NewField(int feild[][size]) // инициализация игорового поля
+{
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			feild[i][j] = 0;
+		}
+	}
+}
+void PrintPlayer(int field[][size]) // отрисовка игового поля
+{
+	cout << "\t"<< " ";
+	char line = 65;
+	for (int i = 0; i < size; i++)
+	{
+		cout << (char)(line+i) << " ";
+	}
+	cout << "\n";
+	for (int i = 0; i < size; i++)
+	{
+		cout << i + 1 << "\t" << "|";
+		for (int j = 0; j < size; j++)
+		{
+			cout << field[i][j]<< " ";
+		}
+		cout << "\n";
+	}
+}
+bool compShoot(int field[][size], int &cx, int &cy) //компьютер стреляет
+{
+	for (;;)
+	{
+		cx = rand() % 9;
+		cy = rand() % 9;
+		if (field[cx][cy] == 1 || field[cx][cy] == 5)
+			continue;
+		else break;
+	}
+	if (field[cx][cy] == 2)
+	{
+		field[cx][cy] = 5;
+		return true;
+	}
+	else
+	{
+		field[cx][cy] = 1;
+		return false;
+	}
+}
+void refresh(int player[][size], int shoot[][size], int comp[][size])  // очистка экрана и прорисовка полей после действия
+{
+	system("cls");
+	PrintPlayer(player);
+	cout << "\n";
+	PrintPlayer(shoot);
+	cout << "\n";
+	PrintPlayer(comp);
+	cout << "\n";
+}
+int manualSet(int player[][size])
+{
+	char fdeck[4];
+	int x, y;
+	int countShip = 0;
+	while (countShip != 10)
+	{
+		while (countShip != 1)
+		{
+			PrintPlayer(player);
+			cout << "Установка 4-х палубного. Введите координаты начала корабля\n";
+			gets(fdeck);
+			while (parceCoord(fdeck, x, y) == false)
+			{
+				cout << "Неверные координаты\n";
+				Sleep(2000);
+			}
+			int dopselect;
+			cout << "1 - Горизонтально\n2 - Вертикально\n";
+			cin >> dopselect;
+			cin.ignore();
+			x = x - 1;
+			y = y - 1;
+			if (dopselect == 1 && x + 3 < size)
+			{
+				player[y][x] = 2;
+				player[y][x + 1] = 2;
+				player[y][x + 2] = 2;
+				player[y][x + 3] = 2;
+				countShip++;
+			}
+			else if (dopselect == 2 && y + 3 < size)
+			{
+				player[y][x] = 2;
+				player[y + 1][x] = 2;
+				player[y + 2][x] = 2;
+				player[y + 3][x] = 2;
+				countShip++;
+			}
+			else cout << "В этой точке нельзя разместить корабль\n";
+		}
+		while (countShip != 3)
+		{
+			PrintPlayer(player);
+			cout << "Установка 3-х палубного. Введите координаты начала корабля\n";
+			gets(fdeck);
+			while (parceCoord(fdeck, x, y) == false)
+			{
+				cout << "Неверные координаты\n";
+				Sleep(2000);
+			}
+			int dopselect;
+			cout << "1 - Горизонтально\n2 - Вертикально\n";
+			cin >> dopselect;
+			cin.ignore();
+			x = x - 1;
+			y = y - 1;
+			if (dopselect == 1 && x + 2 < size && can(player, y, x) == true && can(player, y, x + 1) == true && can(player, y, x + 2) == true)
+			{
+				player[y][x] = 2;
+				player[y][x + 1] = 2;
+				player[y][x + 2] = 2;
+				countShip++;
+			}
+			else if (dopselect == 2 && y + 2 < size && can(player, y, x) == true && can(player, y + 1, x) == true && can(player, y + 2, x) == true)
+			{
+				player[y][x] = 2;
+				player[y + 1][x] = 2;
+				player[y + 2][x] = 2;
+				countShip++;
+			}
+			else cout << "В этой точке нельзя разместить корабль\n";
+		}
+		while (countShip != 6)
+		{
+			PrintPlayer(player);
+			cout << "Установка 2-х палубного. Введите координаты начала корабля\n";
+			gets(fdeck);
+			while (parceCoord(fdeck, x, y) == false)
+			{
+				cout << "Неверные координаты\n";
+				Sleep(2000);
+			}
+			int dopselect;
+			cout << "1 - Горизонтально\n2 - Вертикально\n";
+			cin >> dopselect;
+			cin.ignore();
+			x = x - 1;
+			y = y - 1;
+			if (dopselect == 1 && x + 1 < size && can(player, y, x) == true && can(player, y, x+1) == true)
+			{
+				player[y][x] = 2;
+				player[y][x + 1] = 2;
+				countShip++;
+			}
+			else if (dopselect == 2 && y + 1 < size && can(player, y, x) == true && can(player, y + 1, x) == true)
+			{
+				player[y][x] = 2;
+				player[y + 1][x] = 2;
+				countShip++;
+			}
+			else cout << "В этой точке нельзя разместить корабль\n";
+		}
+		while (countShip != 10)
+		{
+			PrintPlayer(player);
+			cout << "Установка 1-палубного. Введите координаты начала корабля\n";
+			gets(fdeck);
+			while (parceCoord(fdeck, x, y) == false)
+			{
+				cout << "Неверные координаты\n";
+				Sleep(2000);
+			}
+			x = x - 1;
+			y = y - 1;
+			if (x < size && can(player, y, x) == true)
+			{
+				player[y][x] = 2;
+				countShip++;
+			}
+			else cout << "В этой точке нельзя разместить корабль\n";
+		}
+	}
+	return player[size][size];
+}
+void main()
+{
+	srand(time(NULL));
+	setlocale(LC_ALL, "rus");
+	int player[size][size];
+	int comp[size][size];
+	int shoot[size][size];
+	NewField(player);
+	NewField(comp);
+	NewField(shoot);
+	int select;
+	for (;;)
+	{
+		cout << "\t\t\t ИГРА \"МОРСКОЙ БОЙ\"\n";
+		cout << "Расставить корабли вручную (нажмите 1)\n";
+		cout << "Расставить корабли автоматически (нажмите 2)\n";
+		cin >> select;
+		cin.ignore();
+		if (select == 1)
+		{
+			player[size][size] = manualSet(player);
+			break;
+		}
+		else if (select == 2)
+		{
+			system("cls");
+			setShips(player);
+			break;
+		}
+		
+		else
+			cout << "Неверный выбор\n";
+		Sleep(2000);
+		system("cls");
+	}
+	setShips(comp);
+	int iKill = 0, compKill = 0;
+	char coord[4];
+	int x, y, cx, cy;
+	for (;;)
+	{
+		refresh(player, shoot, comp);
+		for (;;)    // я стреляю
+		{
+			cout << "Введите координаты выстрела\t";
+			gets(coord);
+			while (parceCoord(coord, x, y) == false)
+			{
+				cout << "Неверные координаты\n";
+				Sleep(2000);
+			}
+			if (shooting(comp, y - 1, x - 1) == false)
+			{
+				space(comp, shoot);
+				refresh(player, shoot, comp);
+				break;     //переход хода
+			}
+			else
+			{
+				if (kill(comp, y - 1, x - 1) == true)
+				{
+					ripShip(comp);       //обводим убитого
+					iKill++;
+					space(comp, shoot);
+					refresh(player, shoot, comp);
+					if (iKill == 10) break;
+				}
+				space(comp, shoot);
+				refresh(player, shoot, comp);
+			}
+		}
+		if (iKill == 10) break;      //выход из игры (победил игрок)
+		for (;;)        // в меня стреляют
+		{
+			if (compShoot(player, cx, cy) == false)
+			{
+				refresh(player, shoot, comp);
+				break;           //переход хода
+			}
+			else if (kill(player, cx, cy) == true)
+				{
+					ripShip(player);       //обводим убитого
+					compKill++;
+					refresh(player, shoot, comp);
+					if (compKill == 10) break; //выход из игры (победил компьютер)
+				}
+			else 
+				refresh(player, shoot, comp);
+		}
+		if (compKill == 10) break;    //выход из игры (победил компьютер)
+	}
+	if (iKill == 10)
+		cout << "Победил ИГРОК!!!\n";
+	else
+		cout << "Победил КОМПЬЮТЕР, слава роботам!\n";
+}
